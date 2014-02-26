@@ -9,6 +9,7 @@
     <!-- Bootstrap -->
     <link href="resources/css/bootstrap.min.css" rel="stylesheet">
     <link href="resources/css/main_template.css" rel="stylesheet">
+    <link href="../graphedit/graphedit.css" rel="stylesheet">
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -40,8 +41,9 @@
     <div class="container">
 
       <div class="starter-template">
-        <h1>Bootstrap starter template</h1>
-        <p class="lead">Use this document as a way to quickly start any new project.<br> All you get is this text and a mostly barebones HTML document.</p>
+		<div class="graphedit_canvas thumbnail"></div>
+        <h1>GraphEditJS</h1>
+        <p class="lead">A javascript-based graph editor that supports property editing.<br> Inspired by <a href="http://bl.ocks.org/rkirsling/5001347">rkirsling</a>.</p>
       </div>
 
     </div>
@@ -51,5 +53,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="resources/js/bootstrap.min.js"></script>
+	<script src="http://d3js.org/d3.v3.min.js"></script>
+	<script src="../graphedit/graphedit.js"></script>
   </body>
 </html>
