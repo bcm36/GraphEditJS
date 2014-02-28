@@ -21,7 +21,8 @@
           // set up SVG for D3
           var colors = d3.scale.category10();
 
-          $(elem).append(toolbarHTML());
+          $(elem).append('<div class="graphedit_toolbar"></div>');
+          renderToolbar();
 
           var svg = d3.select($(elem).get(0)) //give d3 a selector for this element
           .append('svg')
@@ -99,18 +100,40 @@
             mousedown_link = null;
           }
 
-          function toolbarHTML() {
-            return '<div class="graphedit_toolbar"> \
-                      <div class="btn-toolbar" role="toolbar"> \
+          // toolbar vars
+          var MODE_EDIT = 1, MODE_PAN = 2;
+          var mode = MODE_EDIT;
+
+          function renderToolbar() {
+            // render
+            $(elem).find('.graphedit_toolbar').html(_toolbarHTML());
+
+            // add events
+            $(elem).find('.graphedit-toolbar-edit').on('click', function(){ mode = MODE_EDIT; updateToolbar(); });
+            $(elem).find('.graphedit-toolbar-pan').on('click', function(){ mode = MODE_PAN; updateToolbar(); });
+
+          }
+
+          function _toolbarHTML() {
+            return '<div class="btn-toolbar" role="toolbar"> \
                           <div class="btn-group"> \
-                          <button type="button" class="btn btn-default"><span class="glyphicon glyphicon-zoom-out"></span></button> \
-                          <button type="button" class="btn btn-default"><span class="glyphicon glyphicon-zoom-in"></span></button> \
+                          <button type="button" class="graphedit-toolbar-edit btn btn-default"><span class="glyphicon glyphicon-edit"></span></button> \
+                          <button type="button" class="graphedit-toolbar-pan btn btn-default"><span class="glyphicon glyphicon-move"></span></button> \
                         </div> \
                           <div class="btn-group"></div> \
                           <div class="btn-group"></div> \
-                      </div> \
-                    </div>';
-          }
+                      </div>';
+          } //toolbarHTML
+
+          function updateToolbar() {
+            if (mode == MODE_EDIT) {
+              $(elem).find('.graphedit-toolbar-edit').addClass('active');
+              $(elem).find('.graphedit-toolbar-pan').removeClass('active');
+            } else {
+              $(elem).find('.graphedit-toolbar-edit').removeClass('active');
+              $(elem).find('.graphedit-toolbar-pan').addClass('active');
+            }
+          } //updateToolbar
 
           // update force layout (called automatically each iteration)
           function tick() {
