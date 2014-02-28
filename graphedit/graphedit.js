@@ -21,6 +21,8 @@
           // set up SVG for D3
           var colors = d3.scale.category10();
 
+          $(elem).append(toolbarHTML());
+
           var svg = d3.select($(elem).get(0)) //give d3 a selector for this element
           .append('svg')
           .call(d3.behavior.zoom().on("zoom", redraw))
@@ -95,6 +97,19 @@
             mousedown_node = null;
             mouseup_node = null;
             mousedown_link = null;
+          }
+
+          function toolbarHTML() {
+            return '<div class="graphedit_toolbar"> \
+                      <div class="btn-toolbar" role="toolbar"> \
+                          <div class="btn-group"> \
+                          <button type="button" class="btn btn-default"><span class="glyphicon glyphicon-zoom-out"></span></button> \
+                          <button type="button" class="btn btn-default"><span class="glyphicon glyphicon-zoom-in"></span></button> \
+                        </div> \
+                          <div class="btn-group"></div> \
+                          <div class="btn-group"></div> \
+                      </div> \
+                    </div>';
           }
 
           // update force layout (called automatically each iteration)
