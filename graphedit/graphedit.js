@@ -21,9 +21,10 @@
           // set up SVG for D3
           var colors = d3.scale.category10();
 
-          $(elem).append('svg');
           var svg = d3.select($(elem).get(0)) //give d3 a selector for this element
           .append('svg')
+          .call(d3.behavior.zoom().on("zoom", redraw))
+          .append('g')
           .attr('width', options.width)
           .attr('height', options.height);
 
@@ -117,7 +118,13 @@
             circle.attr('transform', function(d) {
               return 'translate(' + d.x + ',' + d.y + ')';
             });
-          }
+          } //tick
+
+          function redraw() {
+            svg.attr("transform",
+                "translate(" + d3.event.translate + ")"
+                + " scale(" + d3.event.scale + ")");
+          } //redraw
 
           // update graph (called when needed)
           function restart() {
