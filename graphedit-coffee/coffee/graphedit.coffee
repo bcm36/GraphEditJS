@@ -6,7 +6,6 @@ height = 500
 colors = d3.scale.category10()
 
 redraw = () ->
-	console.log "in redraw" 
 	svg.attr "transform", "translate(" + d3.event.translate + ")" + "scale(" + d3.event.scale + ")"
 
 
@@ -49,6 +48,18 @@ nodes = svg
 		.attr "class", "node"
 		.attr "r", 5
 		.style "fill", (d) -> colors(d.id)
-		.call force.drag
+
+		# override to turn off force layout
+		.call force.drag().on "drag.force", () -> 
+			d3.select(this).attr "transform", "translate(" + d3.event.x + "," + d3.event.y + ")"
+		
+		.call force.drag().origin () ->
+			t = d3.transform(d3.select(this).attr("transform")).translate
+			{x:t[0], y:t[1]}
+
+stop = () ->
+	console.log("stopped") 
+	force.stop()
+setTimeout stop, 1000 
 
 console.log nodes
