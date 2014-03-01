@@ -5,6 +5,10 @@ width = 960
 height = 500
 colors = d3.scale.category10()
 
+redraw = () ->
+	console.log "in redraw" 
+	svg.attr "transform", "translate(" + d3.event.translate + ")" + "scale(" + d3.event.scale + ")"
+
 
 # init visual
 svg = d3
@@ -12,10 +16,15 @@ svg = d3
 	.append "svg"
 	.attr "width", width
 	.attr "height", height
+	.attr "viewBox", "0 0 " + width + " " + height
+	.attr "preserveAspectRatio", "xMidYMid meet"
+	.attr "pointer-events", "all"
+	.call d3.behavior.zoom().scaleExtent([.1,8]).on "zoom", redraw
+	.append "g"
 
 
 # init nodes
-node_data = ({id:a, reflexive:false} for a in [1..10])
+node_data = ({id:a, reflexive:false} for a in [1..100])
 
 #animation
 tick = () ->
