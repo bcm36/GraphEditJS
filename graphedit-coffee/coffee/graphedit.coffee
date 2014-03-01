@@ -4,11 +4,15 @@ console.log "hello world!"
 width = 960
 height = 500
 colors = d3.scale.category10()
+scale = 0
+translate = 0
 
 redraw = () ->
-	svg.attr "transform", "translate(" + d3.event.translate + ")" + "scale(" + d3.event.scale + ")"
+	if not mousedown_node
+		svg.attr "transform", "translate(" + d3.event.translate + ")" + "scale(" + d3.event.scale + ")"
 
 
+zoom = d3.behavior.zoom().scaleExtent([.1,8]).on "zoom", redraw
 # init visual
 svg = d3
 	.select ".graphedit_canvas"
@@ -18,7 +22,7 @@ svg = d3
 	.attr "viewBox", "0 0 " + width + " " + height
 	.attr "preserveAspectRatio", "xMidYMid meet"
 	.attr "pointer-events", "all"
-	.call d3.behavior.zoom().scaleExtent([.1,8]).on "zoom", redraw
+	.call zoom
 	.append "g"
 
 
@@ -39,6 +43,8 @@ force = d3.layout.force()
 		.on 'tick', tick
 		.start()
 
+mousedown_node = false
+
 #draw data
 nodes = svg
 		.selectAll ".node"
@@ -56,6 +62,15 @@ nodes = svg
 		.call force.drag().origin () ->
 			t = d3.transform(d3.select(this).attr("transform")).translate
 			{x:t[0], y:t[1]}
+		
+		.on "mousedown", (d) ->
+			mousedown_node = true
+			scale = zoom.scale()
+			translate = zoom.translate()
+		.on "mouseup", (d) ->
+			mousedown_node = false
+			zoom.scale scale
+			zoom.translate translate
 
 stop = () ->
 	console.log("stopped") 
