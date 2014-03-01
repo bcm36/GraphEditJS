@@ -33,16 +33,23 @@ svg = canvas
 	.append "g"
 
 # init nodes
-node_data = ({id:a, reflexive:false} for a in [1..100])
+node_data = ({id:a, reflexive:false} for a in [1..10])
+link_data = [{"source":1, "target":3, "value":4}, {"source":1, "target":5, "value":4}]
 
 #animation
 tick = () ->
 	nodes.attr "cx", (d) -> d.x
 	nodes.attr "cy", (d) -> d.y
 
+	links.attr "x1", (d) -> d.source.x
+	links.attr "y1", (d) -> d.source.y
+	links.attr "x2", (d) -> d.target.x
+	links.attr "y2", (d) -> d.target.y
+
 #force layout
 force = d3.layout.force()
 		.nodes node_data
+		.links link_data
 		.size [width, height]
 		.linkDistance 150
 		.charge -500
@@ -51,6 +58,23 @@ force = d3.layout.force()
 
 mousedown_node = false
 
+links = svg.selectAll ".link"
+		.data link_data 
+		.enter()
+		.append "line"
+		.attr "class", "link"
+		.style "stroke", "#000" 
+		.style "stroke-width", () -> 1
+
+		# override to turn off force layout
+		"""
+		.call force.drag().on "drag.force", () -> 
+			d3.select(this).attr "transform", "translate(" + d3.event.x + "," + d3.event.y + ")"
+		
+		.call force.drag().origin () ->
+			t = d3.transform(d3.select(this).attr("transform")).translate
+			{x:t[0], y:t[1]}
+		"""
 #draw data
 nodes = svg
 		.selectAll ".node"
@@ -61,23 +85,27 @@ nodes = svg
 		.attr "r", 5
 		.style "fill", (d) -> colors(d.id)
 
-		# override to turn off force layout
-		.call force.drag().on "drag.force", () -> 
-			d3.select(this).attr "transform", "translate(" + d3.event.x + "," + d3.event.y + ")"
-		
-		.call force.drag().origin () ->
-			t = d3.transform(d3.select(this).attr("transform")).translate
-			{x:t[0], y:t[1]}
-		
 		.on "mousedown", (d) ->
 			mousedown_node = true
-			scale = zoom.scale()
-			translate = zoom.translate()
+			#scale = zoom.scale()
+			#translate = zoom.translate()
 			select this
 		.on "mouseup", (d) ->
 			mousedown_node = false
-			zoom.scale scale
-			zoom.translate translate
+			#zoom.scale scale
+			#zoom.translate translate
+
+setPanMode = (turn_on) ->
+	if turn_on
+		console.log "drag on"
+		nodes.call force.drag
+	else
+		console.log "drag off"
+		nodes
+			.on "mousedown.drag", null
+			.on "touchstart.drag", null
+
+setPanMode(true)
 
 # mark a node as selected
 select = (node) -> 
@@ -105,7 +133,7 @@ drawSelection = () ->
 
 stop = () ->
 	console.log("stopped") 
-	force.stop()
+	#force.stop()
 setTimeout stop, 1000 
 
 console.log nodes
