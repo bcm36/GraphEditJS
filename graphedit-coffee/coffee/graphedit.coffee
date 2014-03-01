@@ -73,16 +73,16 @@ nodes = svg
 			mousedown_node = true
 			scale = zoom.scale()
 			translate = zoom.translate()
+			select this
 		.on "mouseup", (d) ->
 			mousedown_node = false
 			zoom.scale scale
 			zoom.translate translate
-		.on "click", (d) ->
-			select this
 
 # mark a node as selected
 select = (node) -> 
-	clearSelection()
+	if not d3.event.shiftKey
+		clearSelection()
 	
 	# add to selection buffer
 	active_selection.push(node)
