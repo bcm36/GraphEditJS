@@ -7,16 +7,23 @@ colors = d3.scale.category10()
 scale = 0
 translate = 0
 
+# nodes the user has currently selected
+active_selection = []
+
 redraw = () ->
 	if not mousedown_node
 		svg.attr "transform", "translate(" + d3.event.translate + ")" + "scale(" + d3.event.scale + ")"
 
-
 zoom = d3.behavior.zoom().scaleExtent([.1,8]).on "zoom", redraw
+
 # init visual
-svg = d3
+canvas = d3
 	.select ".graphedit_canvas"
 	.append "svg"
+	.on "click", () ->
+		if not d3.event.target.classList.contains("node")
+			clearSelection()
+svg = canvas
 	.attr "width", width
 	.attr "height", height
 	.attr "viewBox", "0 0 " + width + " " + height
@@ -24,7 +31,6 @@ svg = d3
 	.attr "pointer-events", "all"
 	.call zoom
 	.append "g"
-
 
 # init nodes
 node_data = ({id:a, reflexive:false} for a in [1..100])
@@ -71,6 +77,31 @@ nodes = svg
 			mousedown_node = false
 			zoom.scale scale
 			zoom.translate translate
+		.on "click", (d) ->
+			select this
+
+# mark a node as selected
+select = (node) -> 
+	clearSelection()
+	
+	# add to selection buffer
+	active_selection.push(node)
+	
+	# tell node it's selected
+	d.selected = true for d in d3.select(node).data()
+	
+	drawSelection()
+
+clearSelection = () ->
+	d3.selectAll(active_selection)
+		.classed("active-node", false)
+		.call (node) -> 
+			node.data().selected = false
+	active_selection = []
+
+drawSelection = () ->
+	d3.selectAll(active_selection)
+		.classed("active-node", true)
 
 stop = () ->
 	console.log("stopped") 

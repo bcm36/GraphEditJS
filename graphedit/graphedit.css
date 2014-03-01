@@ -8,6 +8,11 @@ svg {
   user-select: none;
 }
 
+.active-node {
+	stroke: #000;
+	stroke-width: 2px;
+}
+
 svg:not(.active):not(.ctrl) {
   cursor: crosshair;
 }
