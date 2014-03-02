@@ -124,14 +124,14 @@ class GraphEdit
 
     # new links
     @links.enter()
-      .append "line"
+      .insert "line", ".node"
       .attr "class", "link"
       .style "stroke", "#000"
       .style "stroke-width", () -> 1
 
     @links.exit().remove()
 
-    @nodes = @nodes.data(@node_data, (d)-> d.id)
+    @nodes = @nodes.data(@node_data, (d) -> d.id)
 
     # update existing nodes
     @nodes
@@ -163,8 +163,11 @@ class GraphEdit
     @resetForce()
 
   addNode : (node) =>
-
     @node_data.push(node)
+    @restart()
+
+  addLink : (link) =>
+    @link_data.push(link)
     @restart()
 
 

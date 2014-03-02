@@ -69,7 +69,19 @@
             id: a,
             reflexive: false
           });
-        }
+
+
+        } //for
+
+        for (a = _i = 5; _i <= 100; a = ++_i) {
+          $('.graphedit_canvas').graphEdit('addLink', {
+            source: _i-2,
+            target: _i -1 ,
+          });
+
+        } //for
+
+
         return _results;
       })();
 
