@@ -8,7 +8,12 @@ class GraphEdit
   constructor: ( element, options ) ->
     $el = $(element)
 
+    @TOOLBAR = $el.append('<div class="graphedit-toolbar"></div>')
+    @GRAPH = $el.append('<div class="graphedit-graph"></div>')
+
     me = @
+
+    @renderToolbar()
 
     # config
     @width = 960
@@ -25,7 +30,7 @@ class GraphEdit
 
     # init visual
     @canvas = d3
-      .select element
+      .select @GRAPH.get(0)
       .append "svg"
       .on "click", () ->
         if not d3.event.target.classList.contains("node")
@@ -170,6 +175,30 @@ class GraphEdit
     @link_data.push(link)
     @restart()
 
+  renderToolbar: () =>
+    @TOOLBAR.html(@toolbarTemplate())
+    @TOOLBAR.find('.graphedit-toolbar-zoomin').on('click', @zoomIn)
+    @TOOLBAR.find('.graphedit-toolbar-zoomout').on('click', @zoomOut)
+
+  toolbarTemplate: () =>
+    """
+      <div class="btn-group">
+        <button type="button" class="btn btn-default graphedit-toolbar-zoomin"><span class="glyphicon glyphicon-zoom-in"></span></button>
+        <button type="button" class="btn btn-default graphedit-toolbar-zoomout"><span class="glyphicon glyphicon-zoom-out"></span></button>
+      </div>
+    """
+
+  zoomIn : () =>
+    s = @zoom.scale()
+    @zoom.center([@width/2,@height/2])
+    @zoom.scale(s * 1.5)
+    @zoom.event(@svg)
+
+  zoomOut : () =>
+    s = @zoom.scale()
+    @zoom.center([@width/2,@height/2])
+    @zoom.scale(s * 0.5)
+    @zoom.event(@svg)
 
 # GRAPHEDIT PLUGIN DEFINITION
 # ==========================
