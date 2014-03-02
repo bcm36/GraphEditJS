@@ -61,6 +61,17 @@
 
 	//attach graphedit obj to canvas
 	$('.graphedit_canvas').graphEdit({height:500, width:950});
+    node_data = (function() {
+        var _i, _results;
+        _results = [];
+        for (a = _i = 5; _i <= 100; a = ++_i) {
+          $('.graphedit_canvas').graphEdit('addNode', {
+            id: a,
+            reflexive: false
+          });
+        }
+        return _results;
+      })();
 
 	</script>
   </body>

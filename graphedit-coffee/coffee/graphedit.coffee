@@ -119,7 +119,7 @@ class GraphEdit
 
     # update existing links
     @links
-      .style "stroke", "#F00"
+      .style "stroke", "#000"
       .attr "class", "link"
 
     # new links
@@ -162,6 +162,10 @@ class GraphEdit
     # update force
     @resetForce()
 
+  addNode : (node) =>
+
+    @node_data.push(node)
+    @restart()
 
 
 # GRAPHEDIT PLUGIN DEFINITION
