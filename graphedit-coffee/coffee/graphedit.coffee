@@ -99,12 +99,22 @@ class GraphEdit
         node.data().selected = false
     @active_selection = []
     @TOOLBAR.find('.graphedit-toolbar-remove').attr('disabled', 'disabled')
+    @displaySelection()
 
+  displaySelection : (data) =>
+    if data
+      @DATAVIEW.html("<pre>" + JSON.stringify(data, null, 2) + "</pre>")
+    else if @active_selection.length == 0
+      @DATAVIEW.html("")
+    else if @active_selection.length == 1
+      @DATAVIEW.html("<pre>" + JSON.stringify(d3.select(@active_selection[0]).data()[0], null, 2) + "</pre>")
 
   # draw the selection
   drawSelection : () =>
     d3.selectAll(@active_selection)
       .classed("active-node", true)
+
+    @displaySelection()
 
   # mark a node as selected
   select : (node) =>
@@ -163,6 +173,10 @@ class GraphEdit
       .style "fill", (d) -> me.colors(d.id)
       .call me.force.drag
 
+      .on "mouseover", () ->
+        me.displaySelection(d3.select(this).data()[0])
+      .on "mouseout", () ->
+        me.displaySelection()
       .on "mousedown", () ->
         me.mousedown_node = true
         me.scale = me.zoom.scale()

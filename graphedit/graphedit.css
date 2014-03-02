@@ -59,3 +59,7 @@ text.id {
   text-anchor: middle;
   font-weight: bold;
 }
+
+.graphedit-dataview {
+  text-align: left;
+}
