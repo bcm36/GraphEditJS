@@ -8,15 +8,24 @@ class GraphEdit
   constructor: ( element, options ) ->
     $el = $(element)
 
-    @TOOLBAR = $el.append('<div class="graphedit-toolbar"></div>')
-    @GRAPH = $el.append('<div class="graphedit-graph"></div>')
+    $el.append """
+    <div class="graphedit-toolbar"></div>
+    <div class="row">
+      <div class="graphedit-graph col-sm-8"></div>
+      <div class="graphedit-dataview col-sm-4"></div>
+    </div>
+    """
+
+    @TOOLBAR = $el.find('.graphedit-toolbar')
+    @GRAPH = $el.find('.graphedit-graph')
+    @DATAVIEW = $el.find('.graphedit-dataview')
 
     me = @
 
     @renderToolbar()
 
     # config
-    @width = 960
+    @width = @GRAPH.innerWidth()
     @height = 500
     @colors = d3.scale.category10()
 
@@ -89,6 +98,8 @@ class GraphEdit
       .call (node) ->
         node.data().selected = false
     @active_selection = []
+    @TOOLBAR.find('.graphedit-toolbar-remove').attr('disabled', 'disabled')
+
 
   # draw the selection
   drawSelection : () =>
@@ -102,6 +113,7 @@ class GraphEdit
 
       # add to selection buffer
       @active_selection.push(node)
+      @TOOLBAR.find('.graphedit-toolbar-remove').removeAttr('disabled')
 
       # tell node it's selected
       d.selected = true for d in d3.select(node).data()
@@ -181,6 +193,7 @@ class GraphEdit
         @node_data.splice(@node_data.indexOf(d), 1);
         @removeRelatedEdges d
     @restart()
+    @clearSelection()
 
   removeRelatedEdges : (d) =>
     me = @
@@ -193,10 +206,15 @@ class GraphEdit
 
 
   renderToolbar: () =>
+    me = @
     @TOOLBAR.html(@toolbarTemplate())
     @TOOLBAR.find('.graphedit-toolbar-zoomin').on('click', @zoomIn)
     @TOOLBAR.find('.graphedit-toolbar-zoomout').on('click', @zoomOut)
     @TOOLBAR.find('.graphedit-toolbar-remove').on('click', @remove)
+
+    d3.select(window).on 'keydown', () ->
+      if d3.event.keyCode in [46, 8]
+        me.remove()
 
   toolbarTemplate: () =>
     """
