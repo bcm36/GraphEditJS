@@ -175,16 +175,37 @@ class GraphEdit
     @link_data.push(link)
     @restart()
 
+  remove : () =>
+    if @active_selection.length > 0
+      for d in d3.selectAll(@active_selection).data()
+        @node_data.splice(@node_data.indexOf(d), 1);
+        @removeRelatedEdges d
+    @restart()
+
+  removeRelatedEdges : (d) =>
+    me = @
+    to_remove = @link_data.filter (l) ->
+      l.source == d || l.target == d
+    to_remove.map (l) ->
+      me.link_data.splice(me.link_data.indexOf(l), 1)
+
+    @restart()
+
+
   renderToolbar: () =>
     @TOOLBAR.html(@toolbarTemplate())
     @TOOLBAR.find('.graphedit-toolbar-zoomin').on('click', @zoomIn)
     @TOOLBAR.find('.graphedit-toolbar-zoomout').on('click', @zoomOut)
+    @TOOLBAR.find('.graphedit-toolbar-remove').on('click', @remove)
 
   toolbarTemplate: () =>
     """
       <div class="btn-group">
         <button type="button" class="btn btn-default graphedit-toolbar-zoomin"><span class="glyphicon glyphicon-zoom-in"></span></button>
         <button type="button" class="btn btn-default graphedit-toolbar-zoomout"><span class="glyphicon glyphicon-zoom-out"></span></button>
+      </div>
+      <div class="btn-group">
+        <button type="button" class="btn btn-default graphedit-toolbar-remove"><span class="glyphicon glyphicon-trash"></span></button>
       </div>
     """
 
