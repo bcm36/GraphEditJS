@@ -99,6 +99,7 @@ class GraphEdit
         node.data().selected = false
     @active_selection = []
     @TOOLBAR.find('.graphedit-toolbar-remove').attr('disabled', 'disabled')
+    @TOOLBAR.find('.graphedit-toolbar-new-edge').attr('disabled', 'disabled')
     @displaySelection()
 
   displaySelection : (data) =>
@@ -121,14 +122,19 @@ class GraphEdit
     if not d3.event.shiftKey
       @clearSelection()
 
-      # add to selection buffer
-      @active_selection.push(node)
-      @TOOLBAR.find('.graphedit-toolbar-remove').removeAttr('disabled')
+    # add to selection buffer
+    @active_selection.push(node)
+    @TOOLBAR.find('.graphedit-toolbar-remove').removeAttr('disabled')
 
-      # tell node it's selected
-      d.selected = true for d in d3.select(node).data()
+    if @active_selection.length == 2
+      @TOOLBAR.find('.graphedit-toolbar-new-edge').removeAttr('disabled')
+    else
+      @TOOLBAR.find('.graphedit-toolbar-new-edge').attr('disabled', 'disabled')
 
-      @drawSelection()
+    # tell node it's selected
+    d.selected = true for d in d3.select(node).data()
+
+    @drawSelection()
 
   redraw : =>
     if not @mousedown_node
@@ -158,7 +164,7 @@ class GraphEdit
 
     @links.exit().remove()
 
-    @nodes = @nodes.data(@node_data, (d) -> d.id)
+    @nodes = @nodes.data @node_data
 
     # update existing nodes
     @nodes
@@ -193,11 +199,23 @@ class GraphEdit
     # update force
     @resetForce()
 
+  # looks up index of provided node
+  getNodeIndex: (node_id) =>
+    for i in [0..@node_data.length]
+      if @node_data[i].node_id == node_id
+        return i
+    return -1
+
   addNode : (node) =>
     @node_data.push(node)
     @restart()
 
   addLink : (link) =>
+
+    #translate to internal references
+    link['source'] = @getNodeIndex link['src']
+    link['target'] = @getNodeIndex link['dest']
+
     @link_data.push(link)
     @restart()
 
@@ -225,6 +243,8 @@ class GraphEdit
     @TOOLBAR.find('.graphedit-toolbar-zoomin').on('click', @zoomIn)
     @TOOLBAR.find('.graphedit-toolbar-zoomout').on('click', @zoomOut)
     @TOOLBAR.find('.graphedit-toolbar-remove').on('click', @remove)
+    @TOOLBAR.find('.graphedit-toolbar-new-edge').on('click', @newEdge)
+    @TOOLBAR.find('.graphedit-toolbar-new-node').on('click', @newNode)
 
     d3.select(window).on 'keydown', () ->
       if d3.event.keyCode in [46, 8]
@@ -237,7 +257,9 @@ class GraphEdit
         <button type="button" class="btn btn-default graphedit-toolbar-zoomout"><span class="glyphicon glyphicon-zoom-out"></span></button>
       </div>
       <div class="btn-group">
-        <button type="button" class="btn btn-default graphedit-toolbar-remove"><span class="glyphicon glyphicon-trash"></span></button>
+        <button type="button" class="btn btn-default graphedit-toolbar-new-node"><span class="glyphicon glyphicon-plus-sign"></span></button>
+        <button type="button" class="btn btn-default graphedit-toolbar-new-edge" disabled="disabled"><span class="glyphicon glyphicon-resize-horizontal"></span></button>
+        <button type="button" class="btn btn-default graphedit-toolbar-remove" disabled="disabled"><span class="glyphicon glyphicon-trash"></span></button>
       </div>
     """
 
@@ -252,6 +274,15 @@ class GraphEdit
     @zoom.center([@width/2,@height/2])
     @zoom.scale(s * 0.5)
     @zoom.event(@svg)
+
+  #connect two selected notes with an edge
+  newEdge: () =>
+    if @active_selection.length == 2
+      src = d3.select(@active_selection[0]).data()[0]
+      dest = d3.select(@active_selection[1]).data()[0]
+
+      @addLink({"src":src.node_id, "dest":dest.node_id})
+
 
 # GRAPHEDIT PLUGIN DEFINITION
 # ==========================

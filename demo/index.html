@@ -32,7 +32,8 @@
         </div>
         <div class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
-            <li class="active"><a href="#">Home</a></li>
+            <li><a href="#">Home</a></li>
+            <li><a href="#ge-docs-usage">Usage</a></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>
@@ -46,6 +47,28 @@
 		</div>
         <h1>GraphEditJS</h1>
         <p class="lead">A javascript-based graph editor that supports property editing.<br> Inspired by <a href="http://bl.ocks.org/rkirsling/5001347">rkirsling</a>.</p>
+      </div>
+
+      <div id="ge-docs-usage">
+          <h2>Usage</h2>
+          <h3>via JavaScript</h3>
+          <p>Create an instance of GraphEdit via javascript:</p>
+          <div class="highlight">
+              <pre><code class="js">$('.graphedit').graphEdit({});</code></pre>
+          </div>
+
+          <h2>Data format</h2>
+          <p>All nodes should be specified with this format:</p>
+          <pre><code class="js">{node_id: <i>node id</i>}</code></pre>
+          <p>And all edges should be specified with this format:</p>
+          <pre><code class="js">{src: <i>node id</i>, dest: <i>node id</i>}</code></pre>
+          <h2>Limitations</h2>
+          <h3>Reserved keys</h3>
+          <p><strong>Note:</strong> GraphEdit currently does not support the key <em>id</em>
+              in nodes, or the following keys for edges: <em>source</em>, <em>target</em>.
+
+              Your data may be overwritten if you use these keys.
+          </p>
       </div>
 
     </div>
@@ -64,19 +87,20 @@
     node_data = (function() {
         var _i, _results;
         _results = [];
-        for (a = _i = 5; _i <= 100; a = ++_i) {
+        for (a = _i = 505; _i <= 600; a = ++_i) {
           $('.graphedit_canvas').graphEdit('addNode', {
             id: a,
+            node_id: a,
             reflexive: false
           });
 
 
         } //for
 
-        for (a = _i = 5; _i <= 100; a = ++_i) {
+        for (a = _i = 507; _i <= 600; a = ++_i) {
           $('.graphedit_canvas').graphEdit('addLink', {
-            source: _i-2,
-            target: _i -1 ,
+            src: _i - 2,
+            dest: _i - 1,
           });
 
         } //for
