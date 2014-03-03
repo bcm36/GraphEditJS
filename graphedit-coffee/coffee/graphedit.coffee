@@ -168,7 +168,7 @@ class GraphEdit
 
     # update existing nodes
     @nodes
-      .style "fill", (d) -> me.colors(d.id)
+      .style "fill", (d) -> me.colors(d.node_id)
 
     # new nodes
     @nodes.enter()
@@ -176,7 +176,7 @@ class GraphEdit
       .append "circle"
       .attr "class", "node"
       .attr "r", 5
-      .style "fill", (d) -> me.colors(d.id)
+      .style "fill", (d) -> me.colors(d.node_id)
       .call me.force.drag
 
       .on "mouseover", () ->
@@ -282,6 +282,11 @@ class GraphEdit
       dest = d3.select(@active_selection[1]).data()[0]
 
       @addLink({"src":src.node_id, "dest":dest.node_id})
+
+  _idSeq : 0
+
+  newNode: () =>
+    @addNode({node_id:"new-" + @_idSeq++})
 
 
 # GRAPHEDIT PLUGIN DEFINITION
