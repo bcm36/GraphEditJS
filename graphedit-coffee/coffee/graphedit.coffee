@@ -104,11 +104,11 @@ class GraphEdit
 
   displaySelection : (data) =>
     if data
-      @DATAVIEW.html("<pre>" + JSON.stringify(data, null, 2) + "</pre>")
+      @DATAVIEW.html("<pre>" + JSON.stringify(data.properties, null, 2) + "</pre>")
     else if @active_selection.length == 0
       @DATAVIEW.html("")
     else if @active_selection.length == 1
-      @DATAVIEW.html("<pre>" + JSON.stringify(d3.select(@active_selection[0]).data()[0], null, 2) + "</pre>")
+      @DATAVIEW.html("<pre>" + JSON.stringify(d3.select(@active_selection[0]).data()[0].properties, null, 2) + "</pre>")
 
   # draw the selection
   drawSelection : () =>
@@ -207,6 +207,11 @@ class GraphEdit
     return -1
 
   addNode : (node) =>
+
+    # move to properties sub-dict
+    node = {'properties':node}
+    node.node_id = node.properties.node_id
+
     @node_data.push(node)
     @restart()
 
@@ -288,19 +293,37 @@ class GraphEdit
   newNode: () =>
     @addNode({node_id:"new-" + @_idSeq++})
 
+  getNodes: () =>
+    @node_data
+
+  getEdges: () =>
+    @edge_data
+
 
 # GRAPHEDIT PLUGIN DEFINITION
 # ==========================
 
 $.fn.graphEdit = ( option, params ) ->
+
+  #default return this, except for getters
+  ret = this
   this.each ->
     $this = $(@)
     data = $this.data 'graphEdit'
     if !data then $this.data 'graphEdit', (data = new GraphEdit @, option)
-    if typeof option is 'string' then data[option].call $this, params
+    if typeof option is 'string'
+      if option == 'getNodes'
+        # return nodes
+        ret = data.getNodes()
+      else if option == 'getEdges'
+        # return edges
+        ret = data.getEdges()
+      else
+        # call method 'option' and return self
+        data[option].call $this, params
+  ret
 
 $.fn.graphEdit.Constructor = GraphEdit
-
 
 # DATA API
 # ===================================

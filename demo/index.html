@@ -62,13 +62,9 @@
           <pre><code class="js">{node_id: <i>node id</i>}</code></pre>
           <p>And all edges should be specified with this format:</p>
           <pre><code class="js">{src: <i>node id</i>, dest: <i>node id</i>}</code></pre>
-          <h2>Limitations</h2>
-          <h3>Reserved keys</h3>
-          <p><strong>Note:</strong> GraphEdit currently does not support the key <em>id</em>
-              in nodes, or the following keys for edges: <em>source</em>, <em>target</em>.
 
-              Your data may be overwritten if you use these keys.
-          </p>
+          <h2>Options<h2>
+
       </div>
 
     </div>
@@ -89,9 +85,7 @@
         _results = [];
         for (a = _i = 505; _i <= 600; a = ++_i) {
           $('.graphedit_canvas').graphEdit('addNode', {
-            id: a,
             node_id: a,
-            reflexive: false
           });
 
 
@@ -105,9 +99,9 @@
 
         } //for
 
-
         return _results;
       })();
+
 
 	</script>
   </body>
