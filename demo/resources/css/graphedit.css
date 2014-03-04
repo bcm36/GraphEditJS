@@ -1,0 +1,47 @@
+svg {
+  background-color: #FFF;
+  cursor: default;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+
+.active-node {
+  stroke: #000;
+  stroke-width: 2px;
+}
+
+.active-edge {
+  stroke: #000 !important;
+  stroke-width: 4px !important;
+}
+
+svg {
+  cursor: crosshair;
+}
+
+circle.node {
+  cursor: pointer;
+}
+
+line.link {
+  cursor: pointer;
+  stroke-width: 1px;
+  stroke: #000;
+}
+
+.graphedit-toolbar {
+  text-align: center;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.graphedit-graph {
+  border:1px solid #EFEFEF;
+}
+
+.graphedit-dataview {
+  text-align: left;
+}
