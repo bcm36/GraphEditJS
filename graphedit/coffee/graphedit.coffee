@@ -11,11 +11,15 @@ class GraphEdit
     $el.append """
 
     <div class="row">
-      <div class="col-sm-8"><div class="graphedit-graph"></div></div>
+      <div class="col-sm-8">
+        <div class="row">
+          <div class="graphedit-graph"></div>
+        </div>
+        <div class="row">
+          <div class="col-sm-12"><div class="graphedit-toolbar"></div></div>
+        </div>
+      </div>
       <div class="col-sm-4"><div class="graphedit-dataview"></div></div>
-    </div>
-    <div class="row">
-      <div class="col-sm-12"><div class="graphedit-toolbar"></div></div>
     </div>
     """
 

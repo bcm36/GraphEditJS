@@ -34,6 +34,7 @@ line.link {
 .graphedit-toolbar {
   text-align: center;
   padding-top: 5px;
+  padding-bottom: 5px;
 }
 
 .graphedit-graph {
