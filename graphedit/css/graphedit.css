@@ -29,6 +29,7 @@ circle.node {
 line.link {
   cursor: pointer;
   stroke-width: 1px;
+  stroke: #000;
 }
 
 .graphedit-toolbar {

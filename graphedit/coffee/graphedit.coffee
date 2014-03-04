@@ -189,7 +189,6 @@ class GraphEdit
 
     # update existing links
     @links
-      .style "stroke", "#000"
       .attr "class", "link"
 
     # new links
