@@ -9,10 +9,13 @@ class GraphEdit
     $el = $(element)
 
     $el.append """
-    <div class="graphedit-toolbar"></div>
+
     <div class="row">
-      <div class="graphedit-graph col-sm-8"></div>
-      <div class="graphedit-dataview col-sm-4"></div>
+      <div class="col-sm-8"><div class="graphedit-graph"></div></div>
+      <div class="col-sm-4"><div class="graphedit-dataview"></div></div>
+    </div>
+    <div class="row">
+      <div class="col-sm-12"><div class="graphedit-toolbar"></div></div>
     </div>
     """
 
@@ -215,7 +218,7 @@ class GraphEdit
     @node_data.push(node)
     @restart()
 
-  addLink : (link) =>
+  addEdge : (link) =>
 
     #translate to internal references
     link['source'] = @getNodeIndex link['src']
@@ -286,7 +289,7 @@ class GraphEdit
       src = d3.select(@active_selection[0]).data()[0]
       dest = d3.select(@active_selection[1]).data()[0]
 
-      @addLink({"src":src.node_id, "dest":dest.node_id})
+      @addEdge({"src":src.node_id, "dest":dest.node_id})
 
   _idSeq : 0
 
