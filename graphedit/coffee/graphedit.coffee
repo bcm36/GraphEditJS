@@ -11,11 +11,15 @@ class GraphEdit
     $el.append """
 
     <div class="row">
-      <div class="col-sm-8"><div class="graphedit-graph"></div></div>
+      <div class="col-sm-8">
+        <div class="row">
+          <div class="graphedit-graph"></div>
+        </div>
+        <div class="row">
+          <div class="col-sm-12"><div class="graphedit-toolbar"></div></div>
+        </div>
+      </div>
       <div class="col-sm-4"><div class="graphedit-dataview"></div></div>
-    </div>
-    <div class="row">
-      <div class="col-sm-12"><div class="graphedit-toolbar"></div></div>
     </div>
     """
 
@@ -35,7 +39,8 @@ class GraphEdit
     # state vars
     @scale = 0
     @translate = 0
-    @active_selection = []
+    @selected_nodes = []
+    @selected_edges = []
     @mousedown_node = false
 
     @zoom = d3.behavior.zoom().scaleExtent([.1,8]).on "zoom", @redraw
@@ -45,7 +50,8 @@ class GraphEdit
       .select @GRAPH.get(0)
       .append "svg"
       .on "click", () ->
-        if not d3.event.target.classList.contains("node")
+        if not ( d3.event.target.classList.contains("node") or \
+                d3.event.target.classList.contains("link"))
           me.clearSelection()
 
     @svg = @canvas
@@ -58,11 +64,9 @@ class GraphEdit
       .append "g"
 
     # init nodes
-    @node_data = ({id:a, reflexive:false} for a in [1..4])
-    @link_data = [{"source":1, "target":3, "value":4}, {"source":1, "target":3, "value":4}]
+    @node_data = []
+    @link_data = []
     @force = d3.layout.force()
-      #.nodes @node_data
-      #.links @link_data
       .size [@width, @height]
       .linkDistance 150
       .charge -500
@@ -72,9 +76,8 @@ class GraphEdit
     @nodes = @svg.selectAll ".node"
     @links = @svg.selectAll ".link"
 
-    #@setNodes(@node_data)
-    #@setLinks([{"source":1, "target":3, "value":4}, {"source":1, "target":3, "value":4}])
     @restart()
+    @displayData()
 
 
 
@@ -96,46 +99,77 @@ class GraphEdit
 
   # clear the selection
   clearSelection : () ->
-    d3.selectAll(@active_selection)
+    d3.selectAll(@selected_nodes)
       .classed("active-node", false)
       .call (node) ->
         node.data().selected = false
-    @active_selection = []
+    @selected_nodes = []
+
+    d3.selectAll(@selected_edges)
+      .classed("active-edge", false)
+      .call (edge) ->
+        edge.data().selected = false
+    @selected_edges = []
+
     @TOOLBAR.find('.graphedit-toolbar-remove').attr('disabled', 'disabled')
     @TOOLBAR.find('.graphedit-toolbar-new-edge').attr('disabled', 'disabled')
-    @displaySelection()
+    @drawSelection()
 
-  displaySelection : (data) =>
+  displayData : (data) =>
     if data
       @DATAVIEW.html("<pre>" + JSON.stringify(data.properties, null, 2) + "</pre>")
-    else if @active_selection.length == 0
-      @DATAVIEW.html("")
-    else if @active_selection.length == 1
-      @DATAVIEW.html("<pre>" + JSON.stringify(d3.select(@active_selection[0]).data()[0].properties, null, 2) + "</pre>")
+    else if @selected_nodes.length + @selected_edges.length == 0
+      @DATAVIEW.html("<pre>No items selected</pre>")
+    else if @selected_nodes.length == 1 and @selected_edges.length == 0
+      @DATAVIEW.html("<pre>" + JSON.stringify(d3.select(@selected_nodes[0]).data()[0].properties, null, 2) + "</pre>")
+    else if @selected_nodes.length == 0 and @selected_edges.length == 1
+      @DATAVIEW.html("<pre>" + JSON.stringify(d3.select(@selected_edges[0]).data()[0].properties, null, 2) + "</pre>")
+    else
+      @DATAVIEW.html("<pre>Multiple items selected</pre>")
 
-  # draw the selection
+  # display highlight on selected items
   drawSelection : () =>
-    d3.selectAll(@active_selection)
+    d3.selectAll(@selected_nodes)
       .classed("active-node", true)
 
-    @displaySelection()
+    d3.selectAll(@selected_edges)
+      .classed("active-edge", true)
+
+    @displayData()
 
   # mark a node as selected
-  select : (node) =>
+  selectNode : (node) =>
     if not d3.event.shiftKey
       @clearSelection()
 
     # add to selection buffer
-    @active_selection.push(node)
+    @selected_nodes.push(node)
+
     @TOOLBAR.find('.graphedit-toolbar-remove').removeAttr('disabled')
 
-    if @active_selection.length == 2
+    # iff 2 nodes selected, allow new edge
+    if @selected_nodes.length == 2 and @selected_edges.length == 0
       @TOOLBAR.find('.graphedit-toolbar-new-edge').removeAttr('disabled')
     else
       @TOOLBAR.find('.graphedit-toolbar-new-edge').attr('disabled', 'disabled')
 
     # tell node it's selected
     d.selected = true for d in d3.select(node).data()
+
+    @drawSelection()
+
+  # mark edge as selected
+  selectEdge : (edge) =>
+    if not d3.event.shiftKey
+      @clearSelection()
+
+    # add to selection buffer
+    @selected_edges.push(edge)
+
+    @TOOLBAR.find('.graphedit-toolbar-remove').removeAttr('disabled')
+
+    # tell node it's selected
+    d.selected = true for d in d3.select(edge).data()
 
     @drawSelection()
 
@@ -151,19 +185,24 @@ class GraphEdit
 
   restart : =>
     me = @
-    @links = @links.data(@link_data)
+    @links = @links.data @link_data
 
     # update existing links
     @links
-      .style "stroke", "#000"
       .attr "class", "link"
 
     # new links
     @links.enter()
       .insert "line", ".node"
       .attr "class", "link"
-      .style "stroke", "#000"
-      .style "stroke-width", () -> 1
+      .on "mouseover", () ->
+        link = d3.select(@)
+        me.displayData(link.data()[0])
+      .on "mouseout", () ->
+        link = d3.select(@)
+        me.drawSelection()
+      .on "mousedown", () ->
+        me.selectEdge @
 
     @links.exit().remove()
 
@@ -183,14 +222,14 @@ class GraphEdit
       .call me.force.drag
 
       .on "mouseover", () ->
-        me.displaySelection(d3.select(this).data()[0])
+        me.displayData(d3.select(@).data()[0])
       .on "mouseout", () ->
-        me.displaySelection()
+        me.drawSelection()
       .on "mousedown", () ->
         me.mousedown_node = true
         me.scale = me.zoom.scale()
         me.translate = me.zoom.translate()
-        me.select this
+        me.selectNode this
       .on "mouseup", () ->
         me.mousedown_node = false
         me.zoom.scale me.scale
@@ -220,18 +259,23 @@ class GraphEdit
 
   addEdge : (link) =>
 
+    link = {'properties':link}
+
     #translate to internal references
-    link['source'] = @getNodeIndex link['src']
-    link['target'] = @getNodeIndex link['dest']
+    link['source'] = @getNodeIndex link.properties.src
+    link['target'] = @getNodeIndex link.properties.dest
 
     @link_data.push(link)
     @restart()
 
   remove : () =>
-    if @active_selection.length > 0
-      for d in d3.selectAll(@active_selection).data()
-        @node_data.splice(@node_data.indexOf(d), 1);
-        @removeRelatedEdges d
+    for d in d3.selectAll(@selected_nodes).data()
+      @node_data.splice(@node_data.indexOf(d), 1);
+      @removeRelatedEdges d
+
+    for d in d3.selectAll(@selected_edges).data()
+      @link_data.splice(@link_data.indexOf(d), 1);
+
     @restart()
     @clearSelection()
 
@@ -285,9 +329,9 @@ class GraphEdit
 
   #connect two selected notes with an edge
   newEdge: () =>
-    if @active_selection.length == 2
-      src = d3.select(@active_selection[0]).data()[0]
-      dest = d3.select(@active_selection[1]).data()[0]
+    if @selected_nodes.length == 2
+      src = d3.select(@selected_nodes[0]).data()[0]
+      dest = d3.select(@selected_nodes[1]).data()[0]
 
       @addEdge({"src":src.node_id, "dest":dest.node_id})
 
@@ -300,7 +344,7 @@ class GraphEdit
     @node_data
 
   getEdges: () =>
-    @edge_data
+    @link_data
 
 
 # GRAPHEDIT PLUGIN DEFINITION
