@@ -47,15 +47,31 @@
         <p class="lead">A javascript-based property graph editor.<br> Inspired by <a href="http://bl.ocks.org/rkirsling/5001347">rkirsling</a>.</p>
       </div>
       <div class="row"><div class="col-md-12">
-          <h2 id="ge-docs-usage">About</h2>
+          <h2 id="ge-docs-about">About</h2>
           <p>This is very much still under development: breaking changes are guaranteed.</p>
 
-          <h2 id="ge-docs-usage">Installation</h2>
+          <h2 id="ge-docs-installation">Installation</h2>
           <h3>Dependencies</h3>
           <p>This plugin relies on D3, Bootstrap and jQuery.</p>
           <p>To build from the coffeescript source, compile with:</p>
           <div class="highlight"><pre><code>coffee -c coffee/graphedit.coffee js/graphedit.js</code></pre></div>
 
+		  <p>Import the needed CSS resources:</p>
+		  <div class="highlight"><pre><code><span class="text-muted">&lt;head&gt;</span>
+<span class="text-muted">...</span>
+&lt;link href="css/graphedit.css" rel="stylesheet"&gt;
+&lt;link href="css/bootstrap.min.css" rel="stylesheet"&gt;
+<span class="text-muted">&lt;/head&gt;</span></pre></code></div>
+
+		  <p>And the required JS resources:</p>
+		  <div class="highlight"><pre><code><span class="text-muted">&lt;body&gt;</span>
+<span class="text-muted">...</span>
+&lt;script src="js/jquery.min.js"&gt;&lt;/script&gt;
+&lt;script src="js/d3.v3.js"&gt;&lt;/script&gt;
+&lt;script src="js/graphedit.js"&gt;&lt;/script&gt;
+<span class="text-muted">&lt;/body&gt;</span></pre></code></div>
+
+          <p>Then invoke as described in <a href="#ge-docs-usage">Usage</a>.</p>
 
           <h2 id="ge-docs-usage">Usage</h2>
           <h3>via JavaScript</h3>
