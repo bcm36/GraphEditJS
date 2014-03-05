@@ -248,7 +248,7 @@ class GraphEdit
 
   # looks up index of provided node
   getNodeIndex: (node_id) =>
-    for i in [0..@node_data.length]
+    for i in [0..@node_data.length - 1]
       if @node_data[i].node_id == node_id
         return i
     return -1
@@ -264,12 +264,16 @@ class GraphEdit
 
   addEdge : (link) =>
 
-    link = {'properties':link}
-
     #translate to internal references
     link = {'properties':link}
     link['source'] = @getNodeIndex link.properties.src
     link['target'] = @getNodeIndex link.properties.dest
+    if link['source'] == -1
+      throw "Couldn't find a node with ID " + link.properties.src
+      return
+    else if link['target'] == -1
+      throw "Couldn't find a node with ID " + link.properties.dest
+      return
 
     @link_data.push(link)
     @restart()
