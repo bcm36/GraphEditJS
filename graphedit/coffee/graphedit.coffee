@@ -9,7 +9,6 @@ class GraphEdit
     $el = $(element)
 
     $el.append """
-
     <div class="row">
       <div class="col-sm-8">
         <div class="row">
@@ -63,10 +62,6 @@ class GraphEdit
       .call @zoom
       .append "g"
 
-
-    # init data & force layout
-    @node_data = []
-    @link_data = []
     @force = d3.layout.force()
       .size [@width, @height]
       .linkDistance 150
@@ -74,25 +69,35 @@ class GraphEdit
       .on 'tick', @tick
       .start()
 
+    #data for each element
+    @node_data = []
+    @link_data = []
+
+    #D3 selector for each corresponding SVG element
     @nodes = @svg.selectAll ".node"
     @links = @svg.selectAll ".link"
 
-    if options and options.nodes
-      for node in options.nodes
-        @addNode node
+    # add any provided nodes/edges on init
+    if options
+      if options.nodes
+        for node in options.nodes
+          @addNode node
+
+      if options.edges
+        for edge in options.edges
+          @addEdge edge
+
+    #enable deletion via delete/backspace key
+    d3.select(window).on 'keydown', () ->
+      if d3.event.keyCode in [46, 8]
+        me.removeSelection()
 
     @restart()
     @displayData()
 
-
-
   _constructor: GraphEdit
 
-  method : =>
-    alert "I am a method"
-    0
-
-  #animation
+  #animation for force layout
   tick : =>
     @nodes.attr "cx", (d) -> d.x
     @nodes.attr "cy", (d) -> d.y
@@ -101,6 +106,11 @@ class GraphEdit
     @links.attr "y1", (d) -> d.source.y
     @links.attr "x2", (d) -> d.target.x
     @links.attr "y2", (d) -> d.target.y
+
+  # pan/zoom when node isn't being dragged
+  redraw : =>
+    if not @mousedown_node
+      @svg.attr "transform", "translate(" + d3.event.translate + ")" + "scale(" + d3.event.scale + ")"
 
   # clear the selection
   clearSelection : () ->
@@ -120,6 +130,7 @@ class GraphEdit
     @TOOLBAR.find('.graphedit-toolbar-new-edge').attr('disabled', 'disabled')
     @drawSelection()
 
+  # display provided data, or whatever is currently selected
   displayData : (data) =>
     if data
       @DATAVIEW.html("<pre>" + JSON.stringify(data.properties, null, 2) + "</pre>")
@@ -178,16 +189,14 @@ class GraphEdit
 
     @drawSelection()
 
-  redraw : =>
-    if not @mousedown_node
-      @svg.attr "transform", "translate(" + d3.event.translate + ")" + "scale(" + d3.event.scale + ")"
-
+  # ensures force layout knows about current data
   resetForce : =>
     @force
       .links @link_data
       .nodes @node_data
       .start()
 
+  # renders and changes to data
   restart : =>
     me = @
     @links = @links.data @link_data
@@ -234,7 +243,7 @@ class GraphEdit
         me.mousedown_node = true
         me.scale = me.zoom.scale()
         me.translate = me.zoom.translate()
-        me.selectNode this
+        me.selectNode @
       .on "mouseup", () ->
         me.mousedown_node = false
         me.zoom.scale me.scale
@@ -248,7 +257,7 @@ class GraphEdit
 
   # looks up index of provided node
   getNodeIndex: (node_id) =>
-    for i in [0..@node_data.length]
+    for i in [0..@node_data.length - 1]
       if @node_data[i].node_id == node_id
         return i
     return -1
@@ -264,17 +273,22 @@ class GraphEdit
 
   addEdge : (link) =>
 
-    link = {'properties':link}
-
     #translate to internal references
     link = {'properties':link}
     link['source'] = @getNodeIndex link.properties.src
     link['target'] = @getNodeIndex link.properties.dest
+    if link['source'] == -1
+      throw "Couldn't find a node with ID " + link.properties.src
+      return
+    else if link['target'] == -1
+      throw "Couldn't find a node with ID " + link.properties.dest
+      return
 
     @link_data.push(link)
     @restart()
 
-  remove : () =>
+  #removes any selected nodes/edges
+  removeSelection : () =>
     for d in d3.selectAll(@selected_nodes).data()
       @node_data.splice(@node_data.indexOf(d), 1);
       @removeRelatedEdges d
@@ -285,28 +299,22 @@ class GraphEdit
     @restart()
     @clearSelection()
 
-  removeRelatedEdges : (d) =>
+  removeRelatedEdges : (node_dict) =>
     me = @
     to_remove = @link_data.filter (l) ->
-      l.source == d || l.target == d
+      l.source == node_dict || l.target == node_dict
     to_remove.map (l) ->
       me.link_data.splice(me.link_data.indexOf(l), 1)
 
     @restart()
 
-
   renderToolbar: () =>
-    me = @
     @TOOLBAR.html(@toolbarTemplate())
     @TOOLBAR.find('.graphedit-toolbar-zoomin').on('click', @zoomIn)
     @TOOLBAR.find('.graphedit-toolbar-zoomout').on('click', @zoomOut)
-    @TOOLBAR.find('.graphedit-toolbar-remove').on('click', @remove)
+    @TOOLBAR.find('.graphedit-toolbar-remove').on('click', @removeSelection)
     @TOOLBAR.find('.graphedit-toolbar-new-edge').on('click', @newEdge)
     @TOOLBAR.find('.graphedit-toolbar-new-node').on('click', @newNode)
-
-    d3.select(window).on 'keydown', () ->
-      if d3.event.keyCode in [46, 8]
-        me.remove()
 
   toolbarTemplate: () =>
     """
@@ -341,8 +349,9 @@ class GraphEdit
 
       @addEdge({"src":src.node_id, "dest":dest.node_id})
 
-  _idSeq : 0
 
+  #allow node inserts from front end
+  _idSeq : 0
   newNode: () =>
     @addNode({node_id:"new-" + @_idSeq++})
 
