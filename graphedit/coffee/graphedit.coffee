@@ -57,12 +57,10 @@ class GraphEdit
       .call @zoom
       .append "g"
 
-    # init nodes
-    @node_data = ({id:a, reflexive:false} for a in [1..4])
-    @link_data = [{"source":1, "target":3, "value":4}, {"source":1, "target":3, "value":4}]
+    # init data & force layout
+    @node_data = []
+    @link_data = []
     @force = d3.layout.force()
-      #.nodes @node_data
-      #.links @link_data
       .size [@width, @height]
       .linkDistance 150
       .charge -500
@@ -72,8 +70,10 @@ class GraphEdit
     @nodes = @svg.selectAll ".node"
     @links = @svg.selectAll ".link"
 
-    #@setNodes(@node_data)
-    #@setLinks([{"source":1, "target":3, "value":4}, {"source":1, "target":3, "value":4}])
+    if options and options.nodes
+      for node in options.nodes
+        @addNode node
+
     @restart()
 
 
@@ -221,8 +221,9 @@ class GraphEdit
   addEdge : (link) =>
 
     #translate to internal references
-    link['source'] = @getNodeIndex link['src']
-    link['target'] = @getNodeIndex link['dest']
+    link = {'properties':link}
+    link['source'] = @getNodeIndex link.properties.src
+    link['target'] = @getNodeIndex link.properties.dest
 
     @link_data.push(link)
     @restart()
@@ -297,10 +298,10 @@ class GraphEdit
     @addNode({node_id:"new-" + @_idSeq++})
 
   getNodes: () =>
-    @node_data
+    (d.properties for d in @node_data)
 
   getEdges: () =>
-    @edge_data
+    (d.properties for d in @link_data)
 
 
 # GRAPHEDIT PLUGIN DEFINITION
