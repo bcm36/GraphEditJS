@@ -9,7 +9,6 @@ class GraphEdit
     $el = $(element)
 
     $el.append """
-
     <div class="row">
       <div class="col-sm-8">
         <div class="row">
@@ -63,10 +62,6 @@ class GraphEdit
       .call @zoom
       .append "g"
 
-
-    # init data & force layout
-    @node_data = []
-    @link_data = []
     @force = d3.layout.force()
       .size [@width, @height]
       .linkDistance 150
@@ -74,25 +69,35 @@ class GraphEdit
       .on 'tick', @tick
       .start()
 
+    #data for each element
+    @node_data = []
+    @link_data = []
+
+    #D3 selector for each corresponding SVG element
     @nodes = @svg.selectAll ".node"
     @links = @svg.selectAll ".link"
 
-    if options and options.nodes
-      for node in options.nodes
-        @addNode node
+    # add any provided nodes/edges on init
+    if options
+      if options.nodes
+        for node in options.nodes
+          @addNode node
+
+      if options.edges
+        for edge in options.edges
+          @addEdge edge
+
+    #enable deletion via delete/backspace key
+    d3.select(window).on 'keydown', () ->
+      if d3.event.keyCode in [46, 8]
+        me.remove()
 
     @restart()
     @displayData()
 
-
-
   _constructor: GraphEdit
 
-  method : =>
-    alert "I am a method"
-    0
-
-  #animation
+  #animation for force layout
   tick : =>
     @nodes.attr "cx", (d) -> d.x
     @nodes.attr "cy", (d) -> d.y
@@ -188,6 +193,7 @@ class GraphEdit
       .nodes @node_data
       .start()
 
+  # renders and changes to data
   restart : =>
     me = @
     @links = @links.data @link_data
@@ -234,7 +240,7 @@ class GraphEdit
         me.mousedown_node = true
         me.scale = me.zoom.scale()
         me.translate = me.zoom.translate()
-        me.selectNode this
+        me.selectNode @
       .on "mouseup", () ->
         me.mousedown_node = false
         me.zoom.scale me.scale
@@ -278,6 +284,7 @@ class GraphEdit
     @link_data.push(link)
     @restart()
 
+  #removes any selected nodes/edges
   remove : () =>
     for d in d3.selectAll(@selected_nodes).data()
       @node_data.splice(@node_data.indexOf(d), 1);
@@ -300,17 +307,12 @@ class GraphEdit
 
 
   renderToolbar: () =>
-    me = @
     @TOOLBAR.html(@toolbarTemplate())
     @TOOLBAR.find('.graphedit-toolbar-zoomin').on('click', @zoomIn)
     @TOOLBAR.find('.graphedit-toolbar-zoomout').on('click', @zoomOut)
     @TOOLBAR.find('.graphedit-toolbar-remove').on('click', @remove)
     @TOOLBAR.find('.graphedit-toolbar-new-edge').on('click', @newEdge)
     @TOOLBAR.find('.graphedit-toolbar-new-node').on('click', @newNode)
-
-    d3.select(window).on 'keydown', () ->
-      if d3.event.keyCode in [46, 8]
-        me.remove()
 
   toolbarTemplate: () =>
     """
