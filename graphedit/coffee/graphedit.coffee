@@ -63,7 +63,8 @@ class GraphEdit
       .call @zoom
       .append "g"
 
-    # init nodes
+
+    # init data & force layout
     @node_data = []
     @link_data = []
     @force = d3.layout.force()
@@ -75,6 +76,10 @@ class GraphEdit
 
     @nodes = @svg.selectAll ".node"
     @links = @svg.selectAll ".link"
+
+    if options and options.nodes
+      for node in options.nodes
+        @addNode node
 
     @restart()
     @displayData()
@@ -262,6 +267,7 @@ class GraphEdit
     link = {'properties':link}
 
     #translate to internal references
+    link = {'properties':link}
     link['source'] = @getNodeIndex link.properties.src
     link['target'] = @getNodeIndex link.properties.dest
 
@@ -341,10 +347,10 @@ class GraphEdit
     @addNode({node_id:"new-" + @_idSeq++})
 
   getNodes: () =>
-    @node_data
+    (d.properties for d in @node_data)
 
   getEdges: () =>
-    @link_data
+    (d.properties for d in @link_data)
 
 
 # GRAPHEDIT PLUGIN DEFINITION
