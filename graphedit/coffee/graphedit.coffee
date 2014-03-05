@@ -30,9 +30,13 @@ class GraphEdit
 
     @renderToolbar()
 
+    @zoom = d3.behavior.zoom().scaleExtent([.1,8]).on "zoom", @redraw
+
+    @resize true
+    $(window).resize () =>
+      @resize()
+
     # config
-    @width = @GRAPH.innerWidth()
-    @height = 500
     @colors = d3.scale.category10()
 
     # state vars
@@ -42,40 +46,9 @@ class GraphEdit
     @selected_edges = []
     @mousedown_node = false
 
-    @zoom = d3.behavior.zoom().scaleExtent([.1,8]).on "zoom", @redraw
-
-    # init visual
-    @canvas = d3
-      .select @GRAPH.get(0)
-      .append "svg"
-      .on "click", () ->
-        if not ( d3.event.target.classList.contains("node") or \
-                d3.event.target.classList.contains("link"))
-          me.clearSelection()
-
-    @svg = @canvas
-      .attr "width", @width
-      .attr "height", @height
-      .attr "viewBox", "0 0 " + @width + " " + @height
-      .attr "preserveAspectRatio", "xMidYMid meet"
-      .attr "pointer-events", "all"
-      .call @zoom
-      .append "g"
-
-    @force = d3.layout.force()
-      .size [@width, @height]
-      .linkDistance 150
-      .charge -500
-      .on 'tick', @tick
-      .start()
-
     #data for each element
     @node_data = []
     @link_data = []
-
-    #D3 selector for each corresponding SVG element
-    @nodes = @svg.selectAll ".node"
-    @links = @svg.selectAll ".link"
 
     # add any provided nodes/edges on init
     if options
@@ -96,6 +69,45 @@ class GraphEdit
     @displayData()
 
   _constructor: GraphEdit
+
+  resize : (initial) =>
+    @GRAPH.html ""
+    console.log "resize canvas"
+    console.log @GRAPH.innerWidth()
+    @width = @GRAPH.innerWidth()
+    @height = 500
+
+    # init visual
+    @canvas = d3
+      .select @GRAPH.get(0)
+      .append "svg"
+      .on "click", () =>
+        if not ( d3.event.target.classList.contains("node") or \
+                d3.event.target.classList.contains("link"))
+          @clearSelection()
+
+    @svg = @canvas
+      .attr "width", @width
+      .attr "height", @height
+      .attr "viewBox", "0 0 " + @width + " " + @height
+      .attr "preserveAspectRatio", "xMidYMid meet"
+      .attr "pointer-events", "all"
+      .call @zoom
+      .append "g"
+
+    #D3 selector for each corresponding SVG element
+    @nodes = @svg.selectAll ".node"
+    @links = @svg.selectAll ".link"
+
+    @force = d3.layout.force()
+      .size [@width, @height]
+      .linkDistance 150
+      .charge -500
+      .on 'tick', @tick
+      .start()
+
+    if not initial
+      @restart()
 
   #animation for force layout
   tick : =>
@@ -199,6 +211,7 @@ class GraphEdit
   # renders and changes to data
   restart : =>
     me = @
+    console.log "restart"
     @links = @links.data @link_data
 
     # update existing links
