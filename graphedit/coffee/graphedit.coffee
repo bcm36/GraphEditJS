@@ -90,7 +90,7 @@ class GraphEdit
     #enable deletion via delete/backspace key
     d3.select(window).on 'keydown', () ->
       if d3.event.keyCode in [46, 8]
-        me.remove()
+        me.removeSelection()
 
     @restart()
     @displayData()
@@ -106,6 +106,11 @@ class GraphEdit
     @links.attr "y1", (d) -> d.source.y
     @links.attr "x2", (d) -> d.target.x
     @links.attr "y2", (d) -> d.target.y
+
+  # pan/zoom when node isn't being dragged
+  redraw : =>
+    if not @mousedown_node
+      @svg.attr "transform", "translate(" + d3.event.translate + ")" + "scale(" + d3.event.scale + ")"
 
   # clear the selection
   clearSelection : () ->
@@ -125,6 +130,7 @@ class GraphEdit
     @TOOLBAR.find('.graphedit-toolbar-new-edge').attr('disabled', 'disabled')
     @drawSelection()
 
+  # display provided data, or whatever is currently selected
   displayData : (data) =>
     if data
       @DATAVIEW.html("<pre>" + JSON.stringify(data.properties, null, 2) + "</pre>")
@@ -183,10 +189,7 @@ class GraphEdit
 
     @drawSelection()
 
-  redraw : =>
-    if not @mousedown_node
-      @svg.attr "transform", "translate(" + d3.event.translate + ")" + "scale(" + d3.event.scale + ")"
-
+  # ensures force layout knows about current data
   resetForce : =>
     @force
       .links @link_data
@@ -285,7 +288,7 @@ class GraphEdit
     @restart()
 
   #removes any selected nodes/edges
-  remove : () =>
+  removeSelection : () =>
     for d in d3.selectAll(@selected_nodes).data()
       @node_data.splice(@node_data.indexOf(d), 1);
       @removeRelatedEdges d
@@ -296,21 +299,20 @@ class GraphEdit
     @restart()
     @clearSelection()
 
-  removeRelatedEdges : (d) =>
+  removeRelatedEdges : (node_dict) =>
     me = @
     to_remove = @link_data.filter (l) ->
-      l.source == d || l.target == d
+      l.source == node_dict || l.target == node_dict
     to_remove.map (l) ->
       me.link_data.splice(me.link_data.indexOf(l), 1)
 
     @restart()
 
-
   renderToolbar: () =>
     @TOOLBAR.html(@toolbarTemplate())
     @TOOLBAR.find('.graphedit-toolbar-zoomin').on('click', @zoomIn)
     @TOOLBAR.find('.graphedit-toolbar-zoomout').on('click', @zoomOut)
-    @TOOLBAR.find('.graphedit-toolbar-remove').on('click', @remove)
+    @TOOLBAR.find('.graphedit-toolbar-remove').on('click', @removeSelection)
     @TOOLBAR.find('.graphedit-toolbar-new-edge').on('click', @newEdge)
     @TOOLBAR.find('.graphedit-toolbar-new-node').on('click', @newNode)
 
@@ -347,8 +349,9 @@ class GraphEdit
 
       @addEdge({"src":src.node_id, "dest":dest.node_id})
 
-  _idSeq : 0
 
+  #allow node inserts from front end
+  _idSeq : 0
   newNode: () =>
     @addNode({node_id:"new-" + @_idSeq++})
 
