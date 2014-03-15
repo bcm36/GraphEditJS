@@ -142,18 +142,42 @@ class GraphEdit
     @TOOLBAR.find('.graphedit-toolbar-new-edge').attr('disabled', 'disabled')
     @drawSelection()
 
+  _propertyForm : (data) =>
+    str = '<form class="form-horizontal" role="form">'
+    for k,v of data
+      str += """
+        <div class="form-group">
+          <label for="#{k}" class="col-sm-2 control-label">#{k}</label>
+          <div class="col-sm-10">
+            <input id="#{k}" class="form-control" value="#{v}">
+          </div>
+        </div>
+      """
+    str += """
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+          <button type="submit" class="btn btn-default">Save</button>
+        </div>
+      </div>
+    """
+    str += "</form>"
+    str
+
+
   # display provided data, or whatever is currently selected
   displayData : (data) =>
     if data
-      @DATAVIEW.html("<pre>" + JSON.stringify(data.properties, null, 2) + "</pre>")
+      @DATAVIEW.html(@_propertyForm(data.properties))
     else if @selected_nodes.length + @selected_edges.length == 0
-      @DATAVIEW.html("<pre>No items selected</pre>")
+      @DATAVIEW.html('<p class="text-muted text-center">No items selected</p>')
     else if @selected_nodes.length == 1 and @selected_edges.length == 0
-      @DATAVIEW.html("<pre>" + JSON.stringify(d3.select(@selected_nodes[0]).data()[0].properties, null, 2) + "</pre>")
+      @DATAVIEW.html(@_propertyForm(d3.select(@selected_nodes[0]).data()[0].properties))
     else if @selected_nodes.length == 0 and @selected_edges.length == 1
-      @DATAVIEW.html("<pre>" + JSON.stringify(d3.select(@selected_edges[0]).data()[0].properties, null, 2) + "</pre>")
+      @DATAVIEW.html(@_propertyForm(d3.select(@selected_edges[0]).data()[0].properties))
+    else if @selected_nodes.length == 2 and @selected_edges.length == 0
+      @DATAVIEW.html('<p class="text-muted text-center">Two nodes selected, click <span class="glyphicon glyphicon-resize-horizontal"></span> to create an edge</p>')
     else
-      @DATAVIEW.html("<pre>Multiple items selected</pre>")
+      @DATAVIEW.html('<p class="text-muted text-center">Multiple items selected</p>')
 
   # display highlight on selected items
   drawSelection : () =>
@@ -326,8 +350,8 @@ class GraphEdit
     @TOOLBAR.find('.graphedit-toolbar-zoomin').on('click', @zoomIn)
     @TOOLBAR.find('.graphedit-toolbar-zoomout').on('click', @zoomOut)
     @TOOLBAR.find('.graphedit-toolbar-remove').on('click', @removeSelection)
-    @TOOLBAR.find('.graphedit-toolbar-new-edge').on('click', @newEdge)
-    @TOOLBAR.find('.graphedit-toolbar-new-node').on('click', @newNode)
+    @TOOLBAR.find('.graphedit-toolbar-new-edge').on('click', @clickNewEdge)
+    @TOOLBAR.find('.graphedit-toolbar-new-node').on('click', @clickNewNode)
 
   toolbarTemplate: () =>
     """
@@ -355,7 +379,7 @@ class GraphEdit
     @zoom.event(@svg)
 
   #connect two selected notes with an edge
-  newEdge: () =>
+  clickNewEdge: () =>
     if @selected_nodes.length == 2
       src = d3.select(@selected_nodes[0]).data()[0]
       dest = d3.select(@selected_nodes[1]).data()[0]
@@ -365,7 +389,7 @@ class GraphEdit
 
   #allow node inserts from front end
   _idSeq : 0
-  newNode: () =>
+  clickNewNode: () =>
     @addNode({node_id:"new-" + @_idSeq++})
 
   getNodes: () =>
