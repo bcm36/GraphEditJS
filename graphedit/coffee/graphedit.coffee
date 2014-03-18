@@ -144,7 +144,7 @@ class GraphEdit
     @drawSelection()
 
   _propertyForm : (data) =>
-    str = '<form class="form-horizontal" role="form">'
+    str = '<form class="form-horizontal graphedit-property-form" role="form">'
 
     str += '<div class="properties">'
     for k,v of data
@@ -152,7 +152,7 @@ class GraphEdit
         <div class="form-group">
           <label for="#{k}" class="col-sm-4 control-label">#{k}</label>
           <div class="col-sm-8">
-            <input id="#{k}" class="form-control input-sm" value="#{v}">
+            <input id="#{k}" name="#{k}" class="form-control input-sm" value="#{v}">
           </div>
         </div>
       """
@@ -177,6 +177,7 @@ class GraphEdit
   # display provided data, or whatever is currently selected
   displayData : (data) =>
     $('.add_property').off 'click'
+    $('.graphedit-property-form').off 'submit'
 
     if data
       @DATAVIEW.html(@_propertyForm(data.properties))
@@ -192,6 +193,7 @@ class GraphEdit
       @DATAVIEW.html('<p class="text-muted text-center">Multiple items selected</p>')
 
     $('.add_property').on 'click', @clickNewProperty
+    $('.graphedit-property-form').on 'submit', @submitPropertyForm
 
   # display highlight on selected items
   drawSelection : () =>
@@ -414,7 +416,7 @@ class GraphEdit
   #add a new property to the form
   clickNewProperty: () =>
     str = """
-      <div class="form-group">
+      <div class="form-group graphedit-new-property">
         <div class="col-sm-4">
           <input class="form-control input-sm">
         </div>
@@ -424,6 +426,38 @@ class GraphEdit
       </div>
     """
     @DATAVIEW.find('.properties').append(str)
+
+  submitPropertyForm: (e) =>
+    e.preventDefault();
+
+    data = {}
+
+    #extract existing properties (with name attrs)
+    form = $(e.target).serializeArray()
+
+    $.each form, (i, d) =>
+      data[d.name] = d.value
+
+    #add new properties
+    $(e.target).find('.graphedit-new-property').each (i, elm) =>
+      key = $(elm).find('input').first().val()
+      value = $(elm).find('input').last().val()
+      if key.length > 0
+        data[key] = value
+
+    #what's being edited?
+    target = null
+    if @selected_nodes.length == 1 and @selected_edges.length == 0
+      target = @selected_nodes[0]
+    else if @selected_nodes.length == 0 and @selected_edges.length == 1
+      target = @selected_edges[0]
+
+    if target == null
+      throw "Not sure what you were editing"
+
+    $.extend d3.select(target).data()[0].properties, data
+
+    @restart
 
 
 # GRAPHEDIT PLUGIN DEFINITION
