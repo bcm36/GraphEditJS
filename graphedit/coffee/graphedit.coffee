@@ -62,8 +62,11 @@ class GraphEdit
 
     #enable deletion via delete/backspace key
     d3.select(window).on 'keydown', () ->
+      #if backspace
       if d3.event.keyCode in [46, 8]
-        me.removeSelection()
+        #if not typing in a form
+        if $( document.activeElement ).parents('form').length == 0
+          me.removeSelection()
 
     @restart()
     @displayData()
@@ -72,8 +75,6 @@ class GraphEdit
 
   resize : (initial) =>
     @GRAPH.html ""
-    console.log "resize canvas"
-    console.log @GRAPH.innerWidth()
     @width = @GRAPH.innerWidth()
     @height = 500
 
@@ -144,18 +145,27 @@ class GraphEdit
 
   _propertyForm : (data) =>
     str = '<form class="form-horizontal" role="form">'
+
+    str += '<div class="properties">'
     for k,v of data
       str += """
         <div class="form-group">
-          <label for="#{k}" class="col-sm-2 control-label">#{k}</label>
-          <div class="col-sm-10">
-            <input id="#{k}" class="form-control" value="#{v}">
+          <label for="#{k}" class="col-sm-4 control-label">#{k}</label>
+          <div class="col-sm-8">
+            <input id="#{k}" class="form-control input-sm" value="#{v}">
           </div>
         </div>
       """
+    str += "</div>"
+
     str += """
       <div class="form-group">
-        <div class="col-sm-offset-2 col-sm-10">
+        <div class="col-sm-offset-4 col-sm-8">
+          <a href="#" class="add_property">+ Add property</a>
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="col-sm-offset-4 col-sm-8">
           <button type="submit" class="btn btn-default">Save</button>
         </div>
       </div>
@@ -166,6 +176,8 @@ class GraphEdit
 
   # display provided data, or whatever is currently selected
   displayData : (data) =>
+    $('.add_property').off 'click'
+
     if data
       @DATAVIEW.html(@_propertyForm(data.properties))
     else if @selected_nodes.length + @selected_edges.length == 0
@@ -178,6 +190,8 @@ class GraphEdit
       @DATAVIEW.html('<p class="text-muted text-center">Two nodes selected, click <span class="glyphicon glyphicon-resize-horizontal"></span> to create an edge</p>')
     else
       @DATAVIEW.html('<p class="text-muted text-center">Multiple items selected</p>')
+
+    $('.add_property').on 'click', @clickNewProperty
 
   # display highlight on selected items
   drawSelection : () =>
@@ -235,7 +249,6 @@ class GraphEdit
   # renders and changes to data
   restart : =>
     me = @
-    console.log "restart"
     @links = @links.data @link_data
 
     # update existing links
@@ -397,6 +410,20 @@ class GraphEdit
 
   getEdges: () =>
     (d.properties for d in @link_data)
+
+  #add a new property to the form
+  clickNewProperty: () =>
+    str = """
+      <div class="form-group">
+        <div class="col-sm-4">
+          <input class="form-control input-sm">
+        </div>
+        <div class="col-sm-8">
+          <input class="form-control input-sm">
+        </div>
+      </div>
+    """
+    @DATAVIEW.find('.properties').append(str)
 
 
 # GRAPHEDIT PLUGIN DEFINITION
