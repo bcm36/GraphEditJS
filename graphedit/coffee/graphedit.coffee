@@ -149,10 +149,15 @@ class GraphEdit
     str += '<div class="properties">'
     for k,v of data
       str += """
-        <div class="form-group">
+        <div class="form-group graphedit-property">
           <label for="#{k}" class="col-sm-4 control-label">#{k}</label>
           <div class="col-sm-8">
-            <input id="#{k}" name="#{k}" class="form-control input-sm" value="#{v}">
+            <div class="input-group">
+              <input id="#{k}" name="#{k}" class="form-control input-sm" value="#{v}">
+                <div class="input-group-btn">
+                  <button class="btn btn-default btn-sm graphedit-remove-property" type="submit"><span class="glyphicon glyphicon-remove"></span></button>
+                </div>
+            </div>
           </div>
         </div>
       """
@@ -413,19 +418,29 @@ class GraphEdit
   getEdges: () =>
     (d.properties for d in @link_data)
 
+  clickRemoveProperty: (e) =>
+    $(e.target).parents('.graphedit-property').remove()
+
   #add a new property to the form
   clickNewProperty: () =>
     str = """
-      <div class="form-group graphedit-new-property">
+      <div class="form-group graphedit-property graphedit-new-property">
         <div class="col-sm-4">
           <input class="form-control input-sm">
         </div>
         <div class="col-sm-8">
+          <div class="input-group">
           <input class="form-control input-sm">
+            <div class="input-group-btn">
+              <button class="btn btn-default btn-sm graphedit-remove-property" type="submit"><span class="glyphicon glyphicon-remove"></span></button>
+            </div>
+          </div>
         </div>
+
       </div>
     """
     @DATAVIEW.find('.properties').append(str)
+    @DATAVIEW.find('.graphedit-remove-property').on 'click', @clickRemoveProperty
 
   submitPropertyForm: (e) =>
     e.preventDefault();
