@@ -150,7 +150,7 @@ class GraphEdit
     else
       locked_keys = ["node_id"]
 
-    str = '<form class="form-horizontal graphedit-property-form" role="form">'
+    str = '<form class="form-horizontal graphedit-property-form" action="javascript:void(0)" role="form">'
 
     str += '<div class="properties">'
     for k,v of data
@@ -186,12 +186,12 @@ class GraphEdit
     str += """
       <div class="form-group">
         <div class="col-sm-offset-4 col-sm-8">
-          <a href="#" class="add_property">+ Add property</a>
+          <a href="#" class="graphedit-add-property">+ Add property</a>
         </div>
       </div>
       <div class="form-group">
         <div class="col-sm-offset-4 col-sm-8">
-          <button type="submit" class="btn btn-default">Save</button>
+          <button type="submit" class="btn btn-default graphedit-save-properties">Save</button>
         </div>
       </div>
     """
@@ -199,12 +199,12 @@ class GraphEdit
     str
 
   _clearDataviewBindings: () =>
-    $('.add_property').off 'click'
+    $('.graphedit-add-property').off 'click'
     $('.graphedit-property-form').off 'submit'
     $('.graphedit-remove-property').off 'click'
 
   _setDataviewBindings: () =>
-    $('.add_property').on 'click', @clickNewProperty
+    $('.graphedit-add-property').on 'click', @clickNewProperty
     $('.graphedit-property-form').on 'submit', @submitPropertyForm
     $('.graphedit-remove-property').on 'mouseup', @clickRemoveProperty
 
