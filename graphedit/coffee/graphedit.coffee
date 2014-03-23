@@ -62,8 +62,11 @@ class GraphEdit
 
     #enable deletion via delete/backspace key
     d3.select(window).on 'keydown', () ->
+      #if backspace
       if d3.event.keyCode in [46, 8]
-        me.removeSelection()
+        #if not typing in a form
+        if $( document.activeElement ).parents('form').length == 0
+          me.removeSelection()
 
     @restart()
     @displayData()
@@ -72,8 +75,6 @@ class GraphEdit
 
   resize : (initial) =>
     @GRAPH.html ""
-    console.log "resize canvas"
-    console.log @GRAPH.innerWidth()
     @width = @GRAPH.innerWidth()
     @height = 500
 
@@ -142,18 +143,89 @@ class GraphEdit
     @TOOLBAR.find('.graphedit-toolbar-new-edge').attr('disabled', 'disabled')
     @drawSelection()
 
-  # display provided data, or whatever is currently selected
-  displayData : (data) =>
-    if data
-      @DATAVIEW.html("<pre>" + JSON.stringify(data.properties, null, 2) + "</pre>")
-    else if @selected_nodes.length + @selected_edges.length == 0
-      @DATAVIEW.html("<pre>No items selected</pre>")
-    else if @selected_nodes.length == 1 and @selected_edges.length == 0
-      @DATAVIEW.html("<pre>" + JSON.stringify(d3.select(@selected_nodes[0]).data()[0].properties, null, 2) + "</pre>")
-    else if @selected_nodes.length == 0 and @selected_edges.length == 1
-      @DATAVIEW.html("<pre>" + JSON.stringify(d3.select(@selected_edges[0]).data()[0].properties, null, 2) + "</pre>")
+  _propertyForm : (data, type) =>
+
+    if type == "edge"
+      locked_keys = ["src", "dest"]
     else
-      @DATAVIEW.html("<pre>Multiple items selected</pre>")
+      locked_keys = ["node_id"]
+
+    str = '<form class="form-horizontal graphedit-property-form" action="javascript:void(0)" role="form">'
+
+    str += '<div class="properties">'
+    for k,v of data
+
+      str += """
+        <div class="form-group graphedit-property">
+          <label for="#{k}" class="col-sm-4 control-label">#{k}</label>
+          <div class="col-sm-8">
+
+      """
+
+      if k.toLowerCase() in locked_keys
+        str += """
+            <input id="#{k}" name="#{k}-visible" class="form-control input-sm" value="#{v}" disabled>
+            <input id="#{k}" name="#{k}" value="#{v}" type="hidden">
+          """
+      else
+        str += """
+            <div class="input-group">
+              <input id="#{k}" name="#{k}" class="form-control input-sm" value="#{v}">
+              <div class="input-group-btn">
+                <button class="btn btn-default btn-sm graphedit-remove-property"><span class="glyphicon glyphicon-remove"></span></button>
+              </div>
+            </div>
+          """
+
+      str += """
+          </div>
+        </div>
+      """
+    str += "</div>"
+
+    str += """
+      <div class="form-group">
+        <div class="col-sm-offset-4 col-sm-8">
+          <a href="#" class="graphedit-add-property">+ Add property</a>
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="col-sm-offset-4 col-sm-8">
+          <button type="submit" class="btn btn-default graphedit-save-properties">Save</button>
+        </div>
+      </div>
+    """
+    str += "</form>"
+    str
+
+  _clearDataviewBindings: () =>
+    $('.graphedit-add-property').off 'click'
+    $('.graphedit-property-form').off 'submit'
+    $('.graphedit-remove-property').off 'click'
+
+  _setDataviewBindings: () =>
+    $('.graphedit-add-property').on 'click', @clickNewProperty
+    $('.graphedit-property-form').on 'submit', @submitPropertyForm
+    $('.graphedit-remove-property').on 'mouseup', @clickRemoveProperty
+
+  # display provided data (for type in {'edge', 'node'}), or whatever is currently selected
+  displayData : (data, type) =>
+    @_clearDataviewBindings()
+
+    if data
+      @DATAVIEW.html(@_propertyForm(data.properties, type))
+    else if @selected_nodes.length + @selected_edges.length == 0
+      @DATAVIEW.html('<p class="text-muted text-center">No items selected</p>')
+    else if @selected_nodes.length == 1 and @selected_edges.length == 0
+      @DATAVIEW.html(@_propertyForm(d3.select(@selected_nodes[0]).data()[0].properties, 'node'))
+    else if @selected_nodes.length == 0 and @selected_edges.length == 1
+      @DATAVIEW.html(@_propertyForm(d3.select(@selected_edges[0]).data()[0].properties, 'edge'))
+    else if @selected_nodes.length == 2 and @selected_edges.length == 0
+      @DATAVIEW.html('<p class="text-muted text-center">Two nodes selected, click <span class="glyphicon glyphicon-resize-horizontal"></span> to create an edge</p>')
+    else
+      @DATAVIEW.html('<p class="text-muted text-center">Multiple items selected</p>')
+
+    @_setDataviewBindings()
 
   # display highlight on selected items
   drawSelection : () =>
@@ -211,7 +283,6 @@ class GraphEdit
   # renders and changes to data
   restart : =>
     me = @
-    console.log "restart"
     @links = @links.data @link_data
 
     # update existing links
@@ -326,8 +397,8 @@ class GraphEdit
     @TOOLBAR.find('.graphedit-toolbar-zoomin').on('click', @zoomIn)
     @TOOLBAR.find('.graphedit-toolbar-zoomout').on('click', @zoomOut)
     @TOOLBAR.find('.graphedit-toolbar-remove').on('click', @removeSelection)
-    @TOOLBAR.find('.graphedit-toolbar-new-edge').on('click', @newEdge)
-    @TOOLBAR.find('.graphedit-toolbar-new-node').on('click', @newNode)
+    @TOOLBAR.find('.graphedit-toolbar-new-edge').on('click', @clickNewEdge)
+    @TOOLBAR.find('.graphedit-toolbar-new-node').on('click', @clickNewNode)
 
   toolbarTemplate: () =>
     """
@@ -355,7 +426,7 @@ class GraphEdit
     @zoom.event(@svg)
 
   #connect two selected notes with an edge
-  newEdge: () =>
+  clickNewEdge: () =>
     if @selected_nodes.length == 2
       src = d3.select(@selected_nodes[0]).data()[0]
       dest = d3.select(@selected_nodes[1]).data()[0]
@@ -365,7 +436,7 @@ class GraphEdit
 
   #allow node inserts from front end
   _idSeq : 0
-  newNode: () =>
+  clickNewNode: () =>
     @addNode({node_id:"new-" + @_idSeq++})
 
   getNodes: () =>
@@ -373,6 +444,93 @@ class GraphEdit
 
   getEdges: () =>
     (d.properties for d in @link_data)
+
+  clickRemoveProperty: (e) =>
+    $(e.target).parents('.graphedit-property').remove()
+
+  #add a new property to the form
+  clickNewProperty: () =>
+    str = """
+      <div class="form-group graphedit-property graphedit-new-property">
+        <div class="col-sm-4">
+          <input class="form-control input-sm">
+        </div>
+        <div class="col-sm-8">
+          <div class="input-group">
+          <input class="form-control input-sm">
+            <div class="input-group-btn">
+              <button class="btn btn-default btn-sm graphedit-remove-property"><span class="glyphicon glyphicon-remove"></span></button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    """
+    @DATAVIEW.find('.properties').append(str)
+    @DATAVIEW.find('.graphedit-remove-property').on 'mouseup', @clickRemoveProperty
+
+  validatePropertyForm: (form_elm) =>
+    #existing properties
+    data = {}
+
+    #extract existing properties (with name attrs)
+    form = $(form_elm).serializeArray()
+
+    is_valid = true
+
+    $.each form, (i, d) => data[d.name] = d.value
+
+    #new properties
+    $(form_elm).find('.graphedit-new-property').each (i, elm) =>
+      key = $(elm).find('input').first().val()
+      value = $(elm).find('input').last().val()
+      if key.length == 0 and value.length > 0
+        $(elm).addClass('has-error')
+        $(elm).append('<span class="help-block text-danger text-right">Must provide key name</span>')
+        is_valid = false
+
+      else if key.length > 0 and key of data
+        $(elm).addClass('has-error')
+        $(elm).append('<span class="help-block text-danger text-right">Duplicate property</span>')
+        is_valid = false
+
+    return is_valid
+
+
+  submitPropertyForm: (e) =>
+    e.preventDefault();
+
+    if @validatePropertyForm(e.target)
+
+      data = {}
+
+      #extract existing properties (with name attrs)
+      form = $(e.target).serializeArray()
+
+      $.each form, (i, d) =>
+        data[d.name] = d.value
+
+      #add new properties
+      $(e.target).find('.graphedit-new-property').each (i, elm) =>
+        key = $(elm).find('input').first().val()
+        value = $(elm).find('input').last().val()
+        if key.length > 0
+            data[key] = value
+
+      #what's being edited?
+      target = null
+      if @selected_nodes.length == 1 and @selected_edges.length == 0
+        target = @selected_nodes[0]
+      else if @selected_nodes.length == 0 and @selected_edges.length == 1
+        target = @selected_edges[0]
+
+      if target == null
+        throw "Not sure what you were editing"
+
+      d3.select(target).data()[0].properties = data
+
+      @restart()
+      @displayData()
 
 
 # GRAPHEDIT PLUGIN DEFINITION
