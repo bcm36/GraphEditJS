@@ -449,38 +449,68 @@ class GraphEdit
     @DATAVIEW.find('.properties').append(str)
     @DATAVIEW.find('.graphedit-remove-property').on 'click', @clickRemoveProperty
 
-  submitPropertyForm: (e) =>
-    e.preventDefault();
-
+  validatePropertyForm: (form_elm) =>
+    #existing properties
     data = {}
 
     #extract existing properties (with name attrs)
-    form = $(e.target).serializeArray()
+    form = $(form_elm).serializeArray()
 
-    $.each form, (i, d) =>
-      data[d.name] = d.value
+    is_valid = true
 
-    #add new properties
-    $(e.target).find('.graphedit-new-property').each (i, elm) =>
+    $.each form, (i, d) => data[d.name] = d.value
+    
+    #new properties
+    $(form_elm).find('.graphedit-new-property').each (i, elm) =>
       key = $(elm).find('input').first().val()
       value = $(elm).find('input').last().val()
-      if key.length > 0
-        data[key] = value
+      if key.length == 0 and value.length > 0
+        $(elm).addClass('has-error')
+        $(elm).append('<span class="help-block text-danger text-right">Must provide key name</span>')
+        is_valid = false
 
-    #what's being edited?
-    target = null
-    if @selected_nodes.length == 1 and @selected_edges.length == 0
-      target = @selected_nodes[0]
-    else if @selected_nodes.length == 0 and @selected_edges.length == 1
-      target = @selected_edges[0]
+      else if key.length > 0 and key of data
+        $(elm).addClass('has-error')
+        $(elm).append('<span class="help-block text-danger text-right">Duplicate property</span>')
+        is_valid = false
 
-    if target == null
-      throw "Not sure what you were editing"
+    return is_valid
 
-    d3.select(target).data()[0].properties = data
 
-    @restart()
-    @displayData()
+  submitPropertyForm: (e) =>
+    e.preventDefault();
+
+    if @validatePropertyForm(e.target)
+
+      data = {}
+
+      #extract existing properties (with name attrs)
+      form = $(e.target).serializeArray()
+
+      $.each form, (i, d) =>
+        data[d.name] = d.value
+
+      #add new properties
+      $(e.target).find('.graphedit-new-property').each (i, elm) =>
+        key = $(elm).find('input').first().val()
+        value = $(elm).find('input').last().val()
+        if key.length > 0
+            data[key] = value
+
+      #what's being edited?
+      target = null
+      if @selected_nodes.length == 1 and @selected_edges.length == 0
+        target = @selected_nodes[0]
+      else if @selected_nodes.length == 0 and @selected_edges.length == 1
+        target = @selected_edges[0]
+
+      if target == null
+        throw "Not sure what you were editing"
+
+      d3.select(target).data()[0].properties = data
+
+      @restart()
+      @displayData()
 
 
 # GRAPHEDIT PLUGIN DEFINITION
