@@ -178,11 +178,19 @@ class GraphEdit
     str += "</form>"
     str
 
+  _clearDataviewBindings: () =>
+    $('.add_property').off 'click'
+    $('.graphedit-property-form').off 'submit'
+    $('.graphedit-remove-property').off 'click'
+
+  _setDataviewBindings: () =>
+    $('.add_property').on 'click', @clickNewProperty
+    $('.graphedit-property-form').on 'submit', @submitPropertyForm
+    $('.graphedit-remove-property').on 'click', @clickRemoveProperty
 
   # display provided data, or whatever is currently selected
   displayData : (data) =>
-    $('.add_property').off 'click'
-    $('.graphedit-property-form').off 'submit'
+    @_clearDataviewBindings()
 
     if data
       @DATAVIEW.html(@_propertyForm(data.properties))
@@ -197,8 +205,7 @@ class GraphEdit
     else
       @DATAVIEW.html('<p class="text-muted text-center">Multiple items selected</p>')
 
-    $('.add_property').on 'click', @clickNewProperty
-    $('.graphedit-property-form').on 'submit', @submitPropertyForm
+    @_setDataviewBindings()
 
   # display highlight on selected items
   drawSelection : () =>
