@@ -479,7 +479,8 @@ class GraphEdit
 
     $.extend d3.select(target).data()[0].properties, data
 
-    @restart
+    @restart()
+    @displayData()
 
 
 # GRAPHEDIT PLUGIN DEFINITION
