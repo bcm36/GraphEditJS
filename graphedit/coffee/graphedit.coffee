@@ -477,7 +477,7 @@ class GraphEdit
     if target == null
       throw "Not sure what you were editing"
 
-    $.extend d3.select(target).data()[0].properties, data
+    d3.select(target).data()[0].properties = data
 
     @restart()
     @displayData()
