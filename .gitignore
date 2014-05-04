@@ -1,2 +1,3 @@
 .DS_Store
 *.swp
+graphedit/tests/node_modules/*
