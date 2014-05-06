@@ -1,5 +1,7 @@
 # Jasmine tests
 
+$ = window.jQuery;
+
 describe 'GraphEdit', ->
 
   #grab constructor
@@ -19,12 +21,12 @@ describe 'GraphEdit', ->
     ge = new GraphEdit()
     expect(ge).toBeDefined()
 
-  it 'Gives back the right nodes when added on construction', ->
+  it 'Saves nodes provided on construction', ->
     ge = new GraphEdit(@element, {nodes: test_nodes})
     nodes = ge.getNodes()
     expect(nodes).toEqual test_nodes
 
-  it 'Gives back the right nodes when added with "addNode"', ->
+  it 'Saves nodes added via "addNode"', ->
     ge = new GraphEdit(@element)
 
     for node in test_nodes
@@ -33,7 +35,7 @@ describe 'GraphEdit', ->
     nodes = ge.getNodes()
     expect(nodes).toEqual test_nodes
 
-  it 'Gives back the right edges when added with "addEdge"', ->
+  it 'Saves edges added via "addEdge"', ->
     ge = new GraphEdit(@element, {nodes: test_nodes})
 
     for edge in test_edges
@@ -41,14 +43,3 @@ describe 'GraphEdit', ->
 
     edges = ge.getEdges()
     expect(edges).toEqual test_edges
-
-  it 'Renders the right number of nodes and edges', ->
-    ge = new GraphEdit(@element)
-    for node in test_nodes
-      ge.addNode(node)
-    for edge in test_edges
-      ge.addEdge(edge)
-
-    expect($(@element).find('.node').length).toBe test_nodes.length
-    expect($(@element).find('.link').length).toBe test_edges.length
-
