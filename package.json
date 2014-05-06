@@ -1,10 +1,13 @@
 {
-  "name": "specrunner",
+  "name": "graphedit",
   "description": "Runs test suite for GraphEditJS",
   "dependencies": {
     "d3": ">= 3.4.6",
     "jsdom": ">= 0.10.5",
 	"jquery":">= 2.1.1",
+  },
+  "devDependencies":{
+    "coffee-script":"latest",
 	"jasmine-node":">= 1.14.3"
   },
   "scripts":{
